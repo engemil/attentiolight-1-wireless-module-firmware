@@ -2,11 +2,14 @@ services:
   fw_al1_wmod_service:
     build:
       context: .
-      dockerfile: Dockerfile # The path to our Dockerfile
+      dockerfile: Dockerfile
     command: /bin/bash
     tty: true
     privileged: true
     ports:
+      - "3333:3333" # OpenOCD GDB server port
+      - "4444:4444" # OpenOCD Telnet server port
+      - "6666:6666" # OpenOCD TCL server port
     volumes:
-      - ../:/workspace:cached # To be able to spin up from devcontainers
-      - /dev:/dev #
+      - ../:/workspace:cached # Bind the repo into /workspace
+      - /dev:/dev             # Expose host USB / serial devices

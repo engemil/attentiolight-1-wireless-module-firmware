@@ -5,14 +5,20 @@
     "shutdownAction": "none",
     "workspaceFolder": "/workspace",
     "remoteUser": "engemil",
+    // Initialize ESP-IDF submodule + run install.sh on first start.
+    // Idempotent: install.sh is fast on subsequent runs.
+    "postCreateCommand": "bash -lc 'set -e; cd /workspace && git submodule update --init --recursive && if [ -f ext/esp-idf/install.sh ]; then ./ext/esp-idf/install.sh esp32c3; else echo \"[WARN] ext/esp-idf submodule not present yet — run: git submodule add -b release/v5.3 https://github.com/espressif/esp-idf.git ext/esp-idf\"; fi'",
     "customizations": {
         "vscode": {
             "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "marus25.cortex-debug",
+                "mcu-debug.debug-tracker-vscode",
+                "mcu-debug.memory-view",
+                "mcu-debug.rtos-views"
             ],
-            "settings": {
-            }
+            "settings": {}
         }
     }
 }
-
-

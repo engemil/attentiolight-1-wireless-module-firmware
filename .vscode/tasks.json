@@ -1,0 +1,130 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 for the tasks.json schema.
+    //
+    // Every shell task runs through `bash -lc` so ~/.bashrc auto-sources
+    // ext/esp-idf/export.sh (configured by .devcontainer/Dockerfile).
+    "version": "2.0.0",
+    "options": {
+        "presentation": {
+            "echo": true,
+            "reveal": "always",
+            "focus": false,
+            "panel": "shared",
+            "showReuseMessage": false,
+            "clear": true
+        }
+    },
+    "tasks": [
+
+        // ---------------------------------------------------------------------
+        // ESP-IDF Environment / one-time setup
+        // ---------------------------------------------------------------------
+
+        {
+            "label": "setup",
+            "type": "shell",
+            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py set-target ${config:settings.project.target}'",
+            "problemMatcher": [],
+            "detail": "Source ESP-IDF, set-target (run once after install or when target changes)"
+        },
+
+        // ---------------------------------------------------------------------
+        // Build / Clean
+        // ---------------------------------------------------------------------
+
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "rm -rf ${config:settings.project.folder}/build",
+            "problemMatcher": [],
+            "detail": "Remove the build directory"
+        },
+        {
+            "label": "fullclean",
+            "type": "shell",
+            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py fullclean'",
+            "problemMatcher": [],
+            "detail": "ESP-IDF fullclean"
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py build'",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": [ "$gcc" ],
+            "detail": "Build the project"
+        },
+
+        // ---------------------------------------------------------------------
+        // Flash / Monitor
+        // ---------------------------------------------------------------------
+
+        {
+            "label": "flash",
+            "type": "shell",
+            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py -p ${config:settings.serial.port} flash'",
+            "problemMatcher": [],
+            "detail": "Flash to ${config:settings.serial.port}"
+        },
+        {
+            "label": "monitor",
+            "type": "shell",
+            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py -p ${config:settings.serial.port} monitor'",
+            "problemMatcher": [],
+            "detail": "idf.py monitor on ${config:settings.serial.port}"
+        },
+
+        // ---------------------------------------------------------------------
+        // Composites
+        // ---------------------------------------------------------------------
+
+        {
+            "label": "rebuild",
+            "dependsOn": [ "clean", "build" ],
+            "dependsOrder": "sequence",
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "clean + build"
+        },
+        {
+            "label": "rebuild and flash",
+            "dependsOn": [ "clean", "build", "flash" ],
+            "dependsOrder": "sequence",
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "clean + build + flash"
+        },
+        {
+            "label": "rebuild, flash, and monitor",
+            "dependsOn": [ "clean", "build", "flash", "monitor" ],
+            "dependsOrder": "sequence",
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "clean + build + flash + monitor"
+        },
+
+        // ---------------------------------------------------------------------
+        // Serial monitor via minicom (dedicated panel, matches al1mb1 style)
+        // ---------------------------------------------------------------------
+
+        {
+            "label": "Serial (minicom)",
+            "type": "shell",
+            "command": "sleep 1 ; minicom -D ${config:settings.serial.port} -b ${config:settings.serial.baudRate}",
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "group": "serial-ports",
+                "showReuseMessage": false
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "runOptions": {
+                "reevaluateOnRerun": "onInput"
+            },
+            "detail": "minicom on ${config:settings.serial.port} @ ${config:settings.serial.baudRate}"
+        }
+    ]
+}

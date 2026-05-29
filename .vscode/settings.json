@@ -1,0 +1,45 @@
+{
+    // -------------------------------------------------------------------------
+    // Project settings (parameterized so tasks.json / launch.json can reuse)
+    // -------------------------------------------------------------------------
+    "settings.project.name":     "fw_al1_wmod",
+    "settings.project.folder":   "${workspaceFolder}/fw_al1_wmod",
+    "settings.project.target":   "esp32c3",
+    "settings.project.elfFile":  "${workspaceFolder}/fw_al1_wmod/build/fw_al1_wmod.elf",
+
+    // -------------------------------------------------------------------------
+    // ESP-IDF locations (submodule + tools install dir)
+    // -------------------------------------------------------------------------
+    "settings.idf.path":         "${workspaceFolder}/ext/esp-idf",
+    "settings.idf.toolsPath":    "${env:HOME}/.espressif",
+
+    // -------------------------------------------------------------------------
+    // Serial monitor
+    // -------------------------------------------------------------------------
+    "settings.serial.port":      "/dev/ttyACM0",
+    "settings.serial.baudRate":  "115200",
+
+    // -------------------------------------------------------------------------
+    // OpenOCD (for Cortex-Debug launch configs)
+    // -------------------------------------------------------------------------
+    "settings.openocd.board":    "board/esp32c3-builtin.cfg",
+
+    // -------------------------------------------------------------------------
+    // Cortex-Debug binary paths.
+    // Bare names rely on the toolchain being on PATH (via `get_idf` /
+    // auto-sourced `export.sh` in ~/.bashrc — see .devcontainer/Dockerfile).
+    // If Cortex-Debug fails to spawn, replace with absolute paths under
+    //   ${env:HOME}/.espressif/tools/riscv32-esp-elf-gdb/<version>/.../bin/...
+    //   ${env:HOME}/.espressif/tools/openocd-esp32/<version>/openocd-esp32/bin/openocd
+    // -------------------------------------------------------------------------
+    "cortex-debug.gdbPath":      "riscv32-esp-elf-gdb",
+    "cortex-debug.openocdPath":  "openocd",
+
+    // -------------------------------------------------------------------------
+    // Inject ESP-IDF env vars into integrated terminals + spawned processes
+    // -------------------------------------------------------------------------
+    "terminal.integrated.env.linux": {
+        "IDF_PATH":        "${workspaceFolder}/ext/esp-idf",
+        "IDF_TOOLS_PATH":  "${env:HOME}/.espressif"
+    }
+}

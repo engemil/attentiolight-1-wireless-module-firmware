@@ -1,0 +1,19 @@
+# ESP-IDF build artifacts
+fw_al1_wmod/build/
+fw_al1_wmod/sdkconfig
+fw_al1_wmod/sdkconfig.old
+fw_al1_wmod/dependencies.lock
+fw_al1_wmod/managed_components/
+
+# Python
+*.pyc
+__pycache__/
+
+# Editor / OS
+.DS_Store
+.idea/
+*.swp
+*.swo
+
+# ESP-IDF tool install dir (lives under ~/.espressif on the container, not in repo)
+# (no entries needed here)

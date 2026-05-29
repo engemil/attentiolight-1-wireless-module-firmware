@@ -1,0 +1,43 @@
+{
+    // ESP32-C3 debug via Cortex-Debug + openocd-esp32 (no espressif.esp-idf-extension).
+    //
+    // PRECONDITION: ESP-IDF must be installed (./ext/esp-idf/install.sh esp32c3) and
+    // sourced (export.sh in ~/.bashrc auto-handles this in the devcontainer).
+    //
+    // OpenOCD board config: ESP32-C3 built-in USB-Serial-JTAG. If an external probe (ESP-Prog) is ever
+    // needed, swap settings.openocd.board to an interface/ftdi/* config.
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach (no rebuild)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${config:settings.project.elfFile}",
+            "servertype": "openocd",
+            "device": "esp32c3",
+            "configFiles": [
+                "${config:settings.openocd.board}"
+            ],
+            "svdFile": "",
+            "runToEntryPoint": "app_main",
+            "showDevDebugOutput": "none"
+        },
+        {
+            "name": "Rebuild + Flash + Debug",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${config:settings.project.elfFile}",
+            "servertype": "openocd",
+            "device": "esp32c3",
+            "configFiles": [
+                "${config:settings.openocd.board}"
+            ],
+            "preLaunchTask": "rebuild and flash",
+            "svdFile": "",
+            "runToEntryPoint": "app_main",
+            "showDevDebugOutput": "none"
+        }
+    ]
+}

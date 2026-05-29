@@ -1,0 +1,33 @@
+# AttentioLight-1 Wireless Module Firmware — default sdkconfig values.
+# Anything not overridden here uses the ESP-IDF defaults for the target.
+# `idf.py set-target esp32c3` (or `idf.py build` after set-target) merges these.
+
+# ----- Target -----
+CONFIG_IDF_TARGET="esp32c3"
+
+# ----- BLE stack (NimBLE — smaller footprint than Bluedroid for C3) -----
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+# LE Secure Connections (mandatory for Just-Works on modern BLE)
+CONFIG_BT_NIMBLE_SM_LEGACY=n
+CONFIG_BT_NIMBLE_SM_SC=y
+# Persist bonds across reboots
+CONFIG_BT_NIMBLE_NVS_PERSIST=y
+
+# ----- WiFi (disabled in Phase 0–3; enabled in Phase 4) -----
+# Note: ESP-IDF defines a separate top-level config for WiFi; the actual key
+# name varies slightly between versions. We leave the default (enabled) here
+# and flip it off only if/when image size becomes an issue.
+
+# ----- Console / log -----
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_LOG_COLORS=y
+
+# ----- Partition table (custom; defined in partitions.csv) -----
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# ----- Compiler -----
+# -Og is more debug-friendly; we'll switch to -Os/release later for size.
+CONFIG_COMPILER_OPTIMIZATION_DEBUG=y
