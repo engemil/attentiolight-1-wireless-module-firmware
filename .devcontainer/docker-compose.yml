@@ -1,0 +1,12 @@
+services:
+  fw_al1_wmod_service:
+    build:
+      context: .
+      dockerfile: Dockerfile # The path to our Dockerfile
+    command: /bin/bash
+    tty: true
+    privileged: true
+    ports:
+    volumes:
+      - ../:/workspace:cached # To be able to spin up from devcontainers
+      - /dev:/dev #
