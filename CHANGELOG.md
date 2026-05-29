@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the EngEmil STM32 Bootloader project will be documented in this file.
+All notable changes to the project will be documented in this file.
 
 **Version Format:** MAJOR.MINOR.PATCH
 - **MAJOR:** Incompatible API/protocol changes
@@ -8,8 +8,6 @@ All notable changes to the EngEmil STM32 Bootloader project will be documented i
 - **PATCH:** Bug fixes (backward compatible)
 
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-Note: Update `app_header.h` when publishing new version.
 
 ---
 
