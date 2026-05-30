@@ -62,16 +62,16 @@
         {
             "label": "flash",
             "type": "shell",
-            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py -p ${config:settings.serial.port} flash'",
+            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py -p ${input:serialPort} flash'",
             "problemMatcher": [],
-            "detail": "Flash to ${config:settings.serial.port}"
+            "detail": "Flash to a port chosen from the live picker"
         },
         {
             "label": "monitor",
             "type": "shell",
-            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py -p ${config:settings.serial.port} monitor'",
+            "command": "bash -lc '. ${config:settings.idf.path}/export.sh && cd ${config:settings.project.folder} && idf.py -p ${input:serialPort} monitor'",
             "problemMatcher": [],
-            "detail": "idf.py monitor on ${config:settings.serial.port}"
+            "detail": "idf.py monitor on a port chosen from the live picker"
         },
 
         // ---------------------------------------------------------------------
@@ -110,7 +110,7 @@
         {
             "label": "Serial (minicom)",
             "type": "shell",
-            "command": "sleep 1 ; minicom -D ${config:settings.serial.port} -b ${config:settings.serial.baudRate}",
+            "command": "sleep 1 ; minicom -D ${input:serialPort} -b ${config:settings.serial.baudRate}",
             "presentation": {
                 "echo": false,
                 "reveal": "always",
@@ -124,7 +124,30 @@
             "runOptions": {
                 "reevaluateOnRerun": "onInput"
             },
-            "detail": "minicom on ${config:settings.serial.port} @ ${config:settings.serial.baudRate}"
+            "detail": "minicom on a port chosen from the live picker @ ${config:settings.serial.baudRate}"
+        }
+    ],
+
+    // -------------------------------------------------------------------------
+    // Inputs — live serial-port picker.
+    //
+    // Requires the `augustocdias.tasks-shell-input` extension (declared in
+    // .devcontainer/devcontainer.json). It runs the enumeration script and
+    // shows each output line as a quick-pick item; the text before '|' is the
+    // label shown, the text after is the value substituted into the task (the
+    // stable /dev/serial/by-id path). Espressif (303a) devices are listed first.
+    // -------------------------------------------------------------------------
+    "inputs": [
+        {
+            "id": "serialPort",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "bash ${workspaceFolder}/.vscode/scripts/list_serial_ports.sh",
+                "fieldSeparator": "|",
+                "description": "Select the serial port",
+                "useFirstResult": false
+            }
         }
     ]
 }

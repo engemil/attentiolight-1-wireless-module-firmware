@@ -14,10 +14,13 @@ CONFIG_BT_NIMBLE_SM_SC=y
 # Persist bonds across reboots
 CONFIG_BT_NIMBLE_NVS_PERSIST=y
 
-# ----- WiFi (disabled in Phase 0–3; enabled in Phase 4) -----
-# Note: ESP-IDF defines a separate top-level config for WiFi; the actual key
-# name varies slightly between versions. We leave the default (enabled) here
-# and flip it off only if/when image size becomes an issue.
+# ----- WiFi (stack compiled in, radio OFF at runtime) -----
+# Decision: keep the WiFi stack ENABLED in the build (CONFIG_ESP_WIFI_ENABLED=y,
+# the IDF default) so enabling WiFi later needs no sdkconfig change. The radio
+# does NOT auto-start — ESP32 WiFi only powers on when the app calls
+# esp_wifi_init() + esp_wifi_start(). This firmware never calls those, so WiFi
+# stays off at runtime: the intended "off from the application side" posture.
+# (Image budget is fine: hello-world is ~17% of the app partition.)
 
 # ----- Console / log -----
 CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200

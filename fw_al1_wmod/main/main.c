@@ -3,8 +3,8 @@
  *
  * Copyright (c) 2026 EngEmil
  *
- * AttentioLight-1 Wireless Module Firmware — Phase 1 hello-world entry point.
- * Prints chip info and a heartbeat; replaced in Phase 2+ by link/BLE init.
+ * AttentioLight-1 Wireless Module Firmware — hello-world entry point.
+ * Prints chip info and a heartbeat.
  */
 
 #include <stdio.h>
@@ -22,7 +22,19 @@ static const char *TAG = "al1_wmod";
 
 void app_main(void)
 {
+    
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
     ESP_LOGI(TAG, "Hello from AttentioLight-1 Wireless Module Firmware");
+
+    /*
+     * Radio posture: WiFi stays OFF at runtime.
+     * The WiFi stack is compiled in (CONFIG_ESP_WIFI_ENABLED=y) so it can be
+     * enabled later without an sdkconfig change, but the radio only powers on
+     * when esp_wifi_init() + esp_wifi_start() are called — which this firmware
+     * deliberately never does yet. BLE is brought up separately once that
+     * work lands.
+     */
 
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);

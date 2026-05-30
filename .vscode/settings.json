@@ -14,9 +14,16 @@
     "settings.idf.toolsPath":    "${env:HOME}/.espressif",
 
     // -------------------------------------------------------------------------
-    // Serial monitor
+    // Serial port
+    //
+    // Flash / monitor / minicom tasks prompt with a live picker built from
+    // `.vscode/scripts/list_serial_ports.sh` (see the ${input:serialPort} input in
+    // tasks.json), so the port is chosen at run time — no hardcoded ttyACMx.
+    //
+    // This value is only a fallback default (stable /dev/serial/by-id symlink
+    // for the ESP32-C3 USB-JTAG) used by anything that reads it directly.
     // -------------------------------------------------------------------------
-    "settings.serial.port":      "/dev/ttyACM0",
+    "settings.serial.port":      "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_10:20:BA:DD:83:80-if00",
     "settings.serial.baudRate":  "115200",
 
     // -------------------------------------------------------------------------

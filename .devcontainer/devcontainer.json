@@ -16,7 +16,8 @@
                 "marus25.cortex-debug",
                 "mcu-debug.debug-tracker-vscode",
                 "mcu-debug.memory-view",
-                "mcu-debug.rtos-views"
+                "mcu-debug.rtos-views",
+                "augustocdias.tasks-shell-input"
             ],
             "settings": {}
         }

@@ -53,7 +53,7 @@ Then open the folder in VS Code and choose **"Reopen in Container"**. The contai
 The ESP-IDF environment is auto-sourced in every new bash shell inside the container. If you need to source it manually:
 
 ```bash
-get_idf            # alias for: . /workspace/ext/esp-idf/export.sh
+source ./ext/esp-idf/export.sh
 ```
 
 
@@ -65,10 +65,17 @@ From inside the devcontainer:
 cd fw_al1_wmod
 idf.py set-target esp32c3
 idf.py build
-idf.py -p /dev/ttyACM0 flash monitor
+idf.py -p "$(../.vscode/scripts/list_serial_ports.sh | head -1 | cut -d'|' -f2)" flash monitor
 ```
 
+Exit `idf.py monitor` with **Ctrl+T Ctrl+X** (layout-independent); exit minicom
+with **Ctrl+A X**.
+
 Or via VS Code: **Ctrl+Shift+P → Tasks: Run Task →** `rebuild, flash, and monitor`.
+
+**Note:** The flash/monitor tasks prompt with a live port picker (requires the
+`augustocdias.tasks-shell-input` extension, installed automatically in the
+devcontainer).
 
 
 ## Project Structure
@@ -84,26 +91,11 @@ Or via VS Code: **Ctrl+Shift+P → Tasks: Run Task →** `rebuild, flash, and mo
 │   ├── partitions.csv
 │   ├── sdkconfig.defaults
 │   └── README.md
-├── ext/
-│   ├── esp-idf/                # Submodule, pinned to release/v5.3
-│   └── README.md
+├── ext/                        # Submodule(s); esp-idf
 ├── scripts/
-│   └── system/
-│       ├── udev_rules_esp32.sh # Host udev rules
-│       └── dialout_group.sh    # Add current user to dialout group
-├── .devcontainer/
-│   ├── Dockerfile              # Ubuntu 24.04 + ESP-IDF deps
-│   ├── devcontainer.json       # postCreateCommand runs install.sh
-│   └── docker-compose.yml      # Privileged, /dev bind, GDB ports exposed
-├── .vscode/
-│   ├── settings.json           # Parameterized (settings.project.*, settings.idf.*)
-│   ├── tasks.json              # setup / build / flash / monitor + composites
-│   └── launch.json             # Cortex-Debug → openocd-esp32
-├── .gitignore
-├── .gitmodules
-├── CHANGELOG.md
-├── LICENSE
-└── README.md
+│   └── system/                 # Host OS related system scripts
+├── .devcontainer/              # Docker Dev Env Container
+└── .vscode/                    # VS Code Project Config
 ```
 
 
