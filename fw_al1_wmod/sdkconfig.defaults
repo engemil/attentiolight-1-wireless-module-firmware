@@ -23,7 +23,10 @@ CONFIG_BT_NIMBLE_NVS_PERSIST=y
 # (Image budget is fine: hello-world is ~17% of the app partition.)
 
 # ----- Console / log -----
-CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+# The console must NOT use UART0: its default pins (GPIO21=U0TXD, GPIO20=U0RXD)
+# are the STM32<->ESP32 link pins (al1_link). Route the console to the built-in
+# USB-Serial-JTAG instead so UART0's pads are free for the link at 921600.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
 CONFIG_LOG_COLORS=y
 

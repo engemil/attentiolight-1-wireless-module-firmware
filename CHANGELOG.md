@@ -11,20 +11,37 @@ All notable changes to the **AttentioLight-1 Wireless Module Firmware** project 
 
 ---
 
+## [Development] (2026-06-01)
+
+STM32↔ESP32 UART link. Implemented the `al1_link` transport and verified a bidirectional round-trip against the STM32 host on real hardware, each side decodes the other's 1 Hz `tick=N` heartbeat with no CRC errors after sync.
+
+Added
+
+- `fw_al1_wmod/components/al1_link/`, UART link transport. Frame format `[SYNC 0xA5][VER][CHANNEL][SEQ][LEN_HI][LEN_LO][PAYLOAD][CRC16_HI][CRC16_LO]`, CRC-16/CCITT-FALSE over `VER..PAYLOAD`, per-channel sequence numbers, channel mux (`AP_CTRL` / `LOG` / `EVT` / `BULK` / `KEEPALIVE`). Split into a pure, host-testable core (`al1_frame.c` + `crc16_ccitt.c`, no IDF deps) and an ESP-IDF runtime (`al1_link.c`: UART0 driver install + RX/TX FreeRTOS tasks). The pure core is identical with the STM32 side.
+- `fw_al1_wmod/components/al1_link/test/host_test.c`, host unit test (CRC known-answers, frame build/parse round-trip, SEQ wrap, corruption/resync, oversized-LEN).
+- `fw_al1_wmod/main/main.c`, link bring-up, internal-UART-loopback boot self-test (`uart_set_loop_back`), a 1 Hz `LOG` heartbeat, and console diagnostics (`TX LOG[...]` per send + periodic `stats: tx/rx/crc/resync`).
+
+Changed
+
+- `fw_al1_wmod/sdkconfig.defaults`, console routed to the built-in USB-Serial-JTAG (`CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y`). The link uses UART0, whose pads are **GPIO21 (U0TXD) / GPIO20 (U0RXD)**. Do not allow the console to drive them.
+- `fw_al1_wmod/main/CMakeLists.txt`, `main` now requires the `al1_link` component.
+
+---
+
 ## [Development] (2026-05-30)
 
 Verified the hello-world firmware end-to-end on real ESP32-C3 hardware: `idf.py build` → flash → boot banner (`Hello from AttentioLight-1 Wireless Module Firmware`) + chip info + 1 Hz heartbeat, plus OpenOCD/JTAG attach over the built-in USB-Serial-JTAG (gdb server on `:3333`, target halt/resume). The module enumerates only after the STM32 host asserts its enable line.
 
 Changed
 
-- WiFi made explicit: the WiFi stack stays compiled in (`CONFIG_ESP_WIFI_ENABLED=y`) but the radio is held off at runtime — the firmware never calls `esp_wifi_init()` / `esp_wifi_start()`. Documented in `fw_al1_wmod/sdkconfig.defaults` and `fw_al1_wmod/main/main.c`. To be used for future implementation.
-- `.vscode/tasks.json`: `flash` / `monitor` / `Serial (minicom)` tasks no longer hardcode the serial port — they prompt with a live picker (`${input:serialPort}`, used with `augustocdias.tasks-shell-input` VS Code extension), so the port is chosen at run time. The ESP32-C3 USB-Serial-JTAG re-enumerates on every reset, so its `ttyACMx` number is not stable.
+- WiFi made explicit: the WiFi stack stays compiled in (`CONFIG_ESP_WIFI_ENABLED=y`) but the radio is held off at runtime, the firmware never calls `esp_wifi_init()` / `esp_wifi_start()`. Documented in `fw_al1_wmod/sdkconfig.defaults` and `fw_al1_wmod/main/main.c`. To be used for future implementation.
+- `.vscode/tasks.json`: `flash` / `monitor` / `Serial (minicom)` tasks no longer hardcode the serial port, they prompt with a live picker (`${input:serialPort}`, used with `augustocdias.tasks-shell-input` VS Code extension), so the port is chosen at run time. The ESP32-C3 USB-Serial-JTAG re-enumerates on every reset, so its `ttyACMx` number is not stable.
 - `.vscode/settings.json`: `settings.serial.port` fallback default changed to the stable `/dev/serial/by-id/…` symlink for the ESP32-C3 USB-JTAG.
 - `fw_al1_wmod/main/main.c` and `fw_al1_wmod/partitions.csv`: comments clarified and delay added.
 
 Added
 
-- `.vscode/scripts/list_serial_ports.sh`: enumerates USB serial ports (`lsusb` + sysfs) and emits `label|port-path` lines for the VS Code task picker — prefers the stable `/dev/serial/by-id/` path and lists the Espressif (303a) device first.
+- `.vscode/scripts/list_serial_ports.sh`: enumerates USB serial ports (`lsusb` + sysfs) and emits `label|port-path` lines for the VS Code task picker, prefers the stable `/dev/serial/by-id/` path and lists the Espressif (303a) device first.
 - `.devcontainer/devcontainer.json`: added the `augustocdias.tasks-shell-input` extension that powers the dynamic serial-port picker.
 
 ---
