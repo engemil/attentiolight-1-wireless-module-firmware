@@ -7,6 +7,7 @@ This is the source code (firmware) for the **Wireless Module** (ESP32-C3 WROOM) 
 - [Dependencies](#dependencies)
 - [Setup Repository](#setup-repository)
 - [Quick Start](#quick-start)
+- [Tests](#tests)
 - [Project Structure](#project-structure)
 - [Additional Sources](#additional-sources)
 - [License](#license)
@@ -66,6 +67,7 @@ cd fw_al1_wmod
 idf.py set-target esp32c3
 idf.py build
 idf.py -p "$(../.vscode/scripts/list_serial_ports.sh | head -1 | cut -d'|' -f2)" flash monitor
+idf.py fullclean   # delete the entire build/ dir for a from-scratch rebuild
 ```
 
 Exit `idf.py monitor` with **Ctrl+T Ctrl+X** (layout-independent); exit minicom
@@ -76,6 +78,26 @@ Or via VS Code: **Ctrl+Shift+P → Tasks: Run Task →** `rebuild, flash, and mo
 **Note:** The flash/monitor tasks prompt with a live port picker (requires the
 `augustocdias.tasks-shell-input` extension, installed automatically in the
 devcontainer).
+
+
+## Tests
+
+The pure-logic wire cores (framing, CRC, AP reassembly) have host unit tests
+that build with plain `cc` — no ESP-IDF, no hardware. Run from `fw_al1_wmod/`:
+
+```bash
+# al1_link — frame builder/parser + CRC-16 (31 checks)
+cd components/al1_link && \
+  cc -I include -I . -o /tmp/al1_link_test al1_frame.c crc16_ccitt.c test/host_test.c && \
+  /tmp/al1_link_test
+
+# al1_ble — AP frame reassembler (24 checks)
+cd components/al1_ble && \
+  cc -I . -I ../attentio_protocol/include -o /tmp/ap_reasm_test ap_reasm.c test/host_test_ap_reasm.c && \
+  /tmp/ap_reasm_test
+```
+
+Each prints `N checks, 0 failures` and exits non-zero on any failure.
 
 
 ## Project Structure
@@ -97,6 +119,12 @@ devcontainer).
 ├── .devcontainer/              # Docker Dev Env Container
 └── .vscode/                    # VS Code Project Config
 ```
+
+> **Other READMEs** (component- and directory-level docs):
+> - [`fw_al1_wmod/README.md`](fw_al1_wmod/README.md) — application firmware pointer
+> - [`fw_al1_wmod/components/al1_link/README.md`](fw_al1_wmod/components/al1_link/README.md) — STM32↔ESP32 UART link transport (channels, framing, CRC-16)
+> - [`fw_al1_wmod/components/attentio_protocol/README.md`](fw_al1_wmod/components/attentio_protocol/README.md) — shared Attentio Protocol wire core (verbatim copy from the STM32 repo)
+> - [`ext/README.md`](ext/README.md) — external git submodules (ESP-IDF) and how to bump them
 
 
 ## Additional Sources

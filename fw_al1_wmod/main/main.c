@@ -20,6 +20,7 @@
 #include "esp_system.h"
 
 #include "al1_link.h"
+#include "al1_ble.h"
 
 static const char *TAG = "al1_wmod";
 
@@ -49,10 +50,17 @@ static void on_frame(uint8_t channel, uint8_t seq,
         s_selftest_ok = true;
     }
 
-    if (channel == AL1_CH_LOG) {
+    switch (channel) {
+    case AL1_CH_LOG:
         ESP_LOGI(TAG, "RX LOG[seq=%u]: %.*s", seq, (int)len, (const char *)payload);
-    } else {
+        break;
+    case AL1_CH_AP_CTRL:
+        /* AP frames from the STM32 → out to BLE centrals via the bridge. */
+        al1_ble_ap_bridge_on_link_ap(seq, payload, len);
+        break;
+    default:
         ESP_LOGI(TAG, "RX ch=0x%02x seq=%u len=%u", channel, seq, len);
+        break;
     }
 }
 
@@ -149,6 +157,15 @@ void app_main(void)
 #if AL1_LINK_LOOPBACK_TEST
         run_loopback_selftest();
 #endif
+    }
+
+    /* Bring up BLE: NimBLE peripheral + Attentio GATT service, advertising. */
+    esp_err_t ble_err = al1_ble_start();
+    if (ble_err != ESP_OK) {
+        ESP_LOGE(TAG, "al1_ble_start failed: %s", esp_err_to_name(ble_err));
+    } else {
+        /* Bridge BLE <-> STM32 AP_CTRL once the host is up. */
+        al1_ble_ap_bridge_init();
     }
 
     /* 1 Hz LOG heartbeat over the link, with TX + stats visibility. */

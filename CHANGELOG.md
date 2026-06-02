@@ -11,6 +11,28 @@ All notable changes to the **AttentioLight-1 Wireless Module Firmware** project 
 
 ---
 
+## [Development] (2026-06-02)
+
+BLE GATT bridge. Brought up the ESP32-C3 as a NimBLE peripheral exposing a custom Attentio BLE Service and bridged it to the STM32 over the `al1_link` `AP_CTRL` channel, so a phone/host can drive the device with the same Attentio Protocol used over USB. Single active BLE session (one controller at a time, matching the STM32 MICB) with per-connection command gating.
+
+Added
+
+- `fw_al1_wmod/components/al1_ble/`, NimBLE peripheral + Attentio Protocol bridge:
+- `al1_ble.c`, NimBLE host bring-up (NVS init; GAP/SM with **Just-Works pairing + LE Secure Connections + bonding persisted in NVS**), advertises as `AttentioLight-1`, active-connection registry, and per-connection MTU-fragmented notifications (`al1_ble_notify_conn` / `al1_ble_notify_all`).
+- `al1_ble_gatt.c`, custom Attentio GATT service (UUIDs `1209EEA1-0001/0002/0003-…`): a TX write characteristic (encryption-required) and an RX notify characteristic.
+- `ap_reasm.{c,h}`, pure host-testable length-only AP frame reassembler (recovers whole AP frames from BLE writes by the AP `LEN` field; CRC + semantics stay with the STM32).
+- `al1_ble_ap_bridge.c`, couples BLE ⇄ `al1_link`: reassembles client writes and forwards them on `AP_CTRL`, and routes inbound responses/events back to the owning connection. **Single active session**, `CLAIM` binds a connection (caches the 2-byte session-id from `OK`), non-controlling connections are gated locally (`ap_cmd_requires_claim` → `AP_ERR_NOT_CONTROLLER`), and a controller disconnect synthesizes a `RELEASE` so the MICB session does not leak.
+- `test/host_test_ap_reasm.c`, host unit test for the reassembler (24 checks).
+- `fw_al1_wmod/components/attentio_protocol/`, the shared Attentio Protocol wire core (`attentio_protocol.{c,h}`) copied **verbatim** from the STM32 repo (packet format, CRC-8, command IDs, `ap_build_*`, `ap_cmd_requires_claim`) so both ends share one definition; `README.md` documents the verbatim-copy invariant.
+
+Changed
+
+- `fw_al1_wmod/main/main.c`, brings up BLE after the link and wires the AP bridge; routes inbound `AP_CTRL` frames to it.
+- `fw_al1_wmod/main/CMakeLists.txt`, `main` now requires `al1_ble`.
+- `README.md`, added a **Tests** section (offline host tests for `al1_link` and `al1_ble`), an `idf.py fullclean` line in Quick Start, and an index of the repo's other README files.
+
+---
+
 ## [Development] (2026-06-01)
 
 STM32↔ESP32 UART link. Implemented the `al1_link` transport and verified a bidirectional round-trip against the STM32 host on real hardware, each side decodes the other's 1 Hz `tick=N` heartbeat with no CRC errors after sync.
