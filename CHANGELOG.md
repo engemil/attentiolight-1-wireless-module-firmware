@@ -13,6 +13,25 @@ All notable changes to the **AttentioLight-1 Wireless Module Firmware** project 
 
 ## [Development] (2026-06-03)
 
+Cleanup. Removed Phase-2 bring-up scaffolding from app_main now that the UART link
+and BLE bridge are verified on hardware.
+
+Changed
+
+- `fw_al1_wmod/main/main.c`, app_main now only initialises the link, BLE, and the
+  AP bridge, then returns — the link RX/TX and NimBLE host keep running in their
+  own tasks.
+
+Removed
+
+- The `AL1_LINK_LOOPBACK_TEST` internal-loopback self-test, the 1 Hz
+  `wmod alive tick=N` LOG heartbeat, and the `TX LOG[...]` / periodic link-stats
+  diagnostics + AP_CTRL echo-back.
+
+---
+
+## [Development] (2026-06-03)
+
 BLE smoke test. Added a host-side test that drives the BLE control path end to end (CLAIM → SET_RGB → EVT_BUTTON → RELEASE) by writing CRC-correct Attentio Protocol frames to the GATT byte pipe, so the wireless path can be verified against real hardware. Built to stay useful where no BLE radio is reachable (e.g. the devcontainer): offline modes generate and self-check the frame bytes; the live mode needs a BLE adapter.
 
 Added
