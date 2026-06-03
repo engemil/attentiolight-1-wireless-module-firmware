@@ -83,21 +83,56 @@ devcontainer).
 ## Tests
 
 The pure-logic wire cores (framing, CRC, AP reassembly) have host unit tests
-that build with plain `cc` — no ESP-IDF, no hardware. Run from `fw_al1_wmod/`:
+that build with plain `cc`, no ESP-IDF, no hardware. Run from `fw_al1_wmod/`:
 
 ```bash
-# al1_link — frame builder/parser + CRC-16 (31 checks)
+# al1_link, frame builder/parser + CRC-16 (31 checks)
 cd components/al1_link && \
   cc -I include -I . -o /tmp/al1_link_test al1_frame.c crc16_ccitt.c test/host_test.c && \
   /tmp/al1_link_test
 
-# al1_ble — AP frame reassembler (24 checks)
+# al1_ble, AP frame reassembler (24 checks)
 cd components/al1_ble && \
   cc -I . -I ../attentio_protocol/include -o /tmp/ap_reasm_test ap_reasm.c test/host_test_ap_reasm.c && \
   /tmp/ap_reasm_test
 ```
 
 Each prints `N checks, 0 failures` and exits non-zero on any failure.
+
+### BLE smoke test (on hardware)
+
+`scripts/test/ble_smoke.py` drives the BLE control path end to end. CLAIM, set
+the LED colour, observe a button event, release. By writing CRC-correct Attentio
+Protocol (AP) frames to the GATT byte pipe. It has offline modes that need no
+radio (useful inside the devcontainer, which has no BLE adapter) and a live mode
+for a host that does.
+
+```bash
+# Offline: verify the CRC / framing / reassembly logic (no BLE, stdlib only).
+python3 scripts/test/ble_smoke.py --selftest
+
+# Offline: print the exact frame hex to paste into nRF Connect's TX write field.
+python3 scripts/test/ble_smoke.py --print-frames --rgb 255,0,0
+```
+
+**Live run (a laptop with a BLE adapter):**
+
+```bash
+pip install -r scripts/test/requirements.txt
+python3 scripts/test/ble_smoke.py                 # scan, connect, full round-trip
+python3 scripts/test/ble_smoke.py --no-button     # skip the button-press wait
+```
+
+**Phone (nRF Connect)** when no BLE-capable host is at hand:
+
+1. Connect to `AttentioLight-1` and enable notifications on the RX
+   characteristic (`1209EEA1-0003-…`).
+2. Write the `CLAIM` hex from `--print-frames` to the TX characteristic
+   (`1209EEA1-0002-…`). The first write triggers Just-Works pairing, accept it.
+   Expect an `OK` notification carrying a 2-byte session id.
+3. Write `SET_RGB` (e.g. red `a5 04 21 ff 00 00 7c`) → the LED changes colour.
+4. Press the device button → an `EVT_BUTTON` notification arrives.
+5. Disconnect and reconnect → the bond is reused (no re-pair prompt).
 
 
 ## Project Structure
@@ -115,16 +150,17 @@ Each prints `N checks, 0 failures` and exits non-zero on any failure.
 │   └── README.md
 ├── ext/                        # Submodule(s); esp-idf
 ├── scripts/
-│   └── system/                 # Host OS related system scripts
+│   ├── system/                 # Host OS related system scripts
+│   └── test/                   # Host test tooling (BLE smoke test)
 ├── .devcontainer/              # Docker Dev Env Container
 └── .vscode/                    # VS Code Project Config
 ```
 
 > **Other READMEs** (component- and directory-level docs):
-> - [`fw_al1_wmod/README.md`](fw_al1_wmod/README.md) — application firmware pointer
-> - [`fw_al1_wmod/components/al1_link/README.md`](fw_al1_wmod/components/al1_link/README.md) — STM32↔ESP32 UART link transport (channels, framing, CRC-16)
-> - [`fw_al1_wmod/components/attentio_protocol/README.md`](fw_al1_wmod/components/attentio_protocol/README.md) — shared Attentio Protocol wire core (verbatim copy from the STM32 repo)
-> - [`ext/README.md`](ext/README.md) — external git submodules (ESP-IDF) and how to bump them
+> - [`fw_al1_wmod/README.md`](fw_al1_wmod/README.md) application firmware pointer
+> - [`fw_al1_wmod/components/al1_link/README.md`](fw_al1_wmod/components/al1_link/README.md) STM32↔ESP32 UART link transport (channels, framing, CRC-16)
+> - [`fw_al1_wmod/components/attentio_protocol/README.md`](fw_al1_wmod/components/attentio_protocol/README.md) shared Attentio Protocol wire core (verbatim copy from the STM32 repo)
+> - [`ext/README.md`](ext/README.md) external git submodules (ESP-IDF) and how to bump them
 
 
 ## Additional Sources
@@ -136,7 +172,7 @@ Each prints `N checks, 0 failures` and exits non-zero on any failure.
 
 ## License
 
-MIT License — see [`LICENSE`](LICENSE) for details.
+MIT License, see [`LICENSE`](LICENSE) for details.
 
 Portions of this project incorporate code from:
 - **ESP-IDF** (Apache License 2.0)

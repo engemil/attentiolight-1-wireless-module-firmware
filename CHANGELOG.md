@@ -11,6 +11,21 @@ All notable changes to the **AttentioLight-1 Wireless Module Firmware** project 
 
 ---
 
+## [Development] (2026-06-03)
+
+BLE smoke test. Added a host-side test that drives the BLE control path end to end (CLAIM → SET_RGB → EVT_BUTTON → RELEASE) by writing CRC-correct Attentio Protocol frames to the GATT byte pipe, so the wireless path can be verified against real hardware. Built to stay useful where no BLE radio is reachable (e.g. the devcontainer): offline modes generate and self-check the frame bytes; the live mode needs a BLE adapter.
+
+Added
+
+- `scripts/test/ble_smoke.py`, `bleak`-based BLE smoke test. Reuses the firmware's wire definitions: the verbatim CRC-8/CCITT table from `attentio_protocol.c`, an `ApReassembler` port of `al1_ble/ap_reasm.c` (notifications fragment at MTU-3, so one AP frame can span several), and the GATT UUIDs / command IDs. Three modes: `--selftest` (offline CRC/frame/reassembly checks, 18 checks, exits non-zero on failure), `--print-frames` (offline; emits the exact frame hex to paste into nRF Connect), and the default live run (scan/connect, CLAIM with Just-Works pairing on first write, SET_RGB cycle, button-event wait, RELEASE, and a bond-reuse reconnect).
+- `scripts/test/requirements.txt`, the `bleak` dependency for the live run only (offline modes are pure stdlib).
+
+Changed
+
+- `README.md`, added a **BLE smoke test (on hardware)** subsection to **Tests** (offline, laptop-`bleak`, and phone/nRF Connect procedures) and listed `scripts/test/` in the project structure.
+
+---
+
 ## [Development] (2026-06-02)
 
 BLE GATT bridge. Brought up the ESP32-C3 as a NimBLE peripheral exposing a custom Attentio BLE Service and bridged it to the STM32 over the `al1_link` `AP_CTRL` channel, so a phone/host can drive the device with the same Attentio Protocol used over USB. Single active BLE session (one controller at a time, matching the STM32 MICB) with per-connection command gating.

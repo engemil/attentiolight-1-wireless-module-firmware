@@ -1,0 +1,5 @@
+# Host dependencies for the BLE smoke test (scripts/test/ble_smoke.py).
+# Only the live run needs these; --selftest and --print-frames are pure stdlib.
+#
+#   pip install -r scripts/test/requirements.txt
+bleak>=0.22
