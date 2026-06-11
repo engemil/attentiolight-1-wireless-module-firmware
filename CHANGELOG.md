@@ -11,6 +11,35 @@ All notable changes to the **AttentioLight-1 Wireless Module Firmware** project 
 
 ---
 
+## [Development] (2026-06-11)
+
+BLE bond-store self-heal. Hardened NimBLE bond persistence so a desynced on-flash
+bond count can no longer permanently block pairing. During host bring-up, repeated
+re-flash / NVS-erase mid-bond left the bond count out of sync with the `nvs`
+partition: the round-robin evictor's `ble_gap_unpair` returned `ENOENT` ("nothing
+to delete"), the overflow never cleared, new bonds failed to persist
+(`BLE_HS_ESTORE_CAP`), and the *next* connect failed SMP auth — which the host
+experienced as a service-discovery drop or a `subscribe` timeout.
+
+Changed
+
+- `fw_al1_wmod/components/al1_ble/al1_ble.c`, registered a new
+  `al1_ble_store_status()` as `ble_hs_cfg.store_status_cb` in place of
+  `ble_store_util_status_rr`. It delegates to the round-robin evictor, and only
+  when RR fails to resolve a `BLE_STORE_EVENT_OVERFLOW` does it call
+  `ble_store_clear()` so the incoming bond writes into a clean store (returning 0
+  to let NimBLE retry the write); on any other path it returns RR's result
+  unchanged, so the healthy case is unaffected.
+
+Notes
+
+- The overflow branch itself is **unverified on hardware**: a single host can't
+  overflow the store (same identity address → `REPEAT_PAIRING` just replaces the
+  bond). Reproducing it needs 4+ distinct centrals, or `CONFIG_BT_NIMBLE_MAX_BONDS=1`
+  plus a second device. `idf.py build` is clean.
+
+---
+
 ## [Development] (2026-06-03)
 
 Cleanup. Removed Phase-2 bring-up scaffolding from app_main now that the UART link

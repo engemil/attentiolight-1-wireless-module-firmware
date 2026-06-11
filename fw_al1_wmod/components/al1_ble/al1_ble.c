@@ -215,6 +215,27 @@ static void al1_ble_on_reset(int reason)
     ESP_LOGE(TAG, "nimble host reset; reason=%d", reason);
 }
 
+/* Bond-store self-heal: NimBLE's round-robin evictor frees the oldest bond on
+ * overflow, but if the on-flash count is desynced (repeated re-flash /
+ * NVS-erase mid-bond during dev) unpair returns ENOENT and the overflow never
+ * clears, so new bonds can't persist (BLE_HS_ESTORE_CAP) and the next connect
+ * fails SMP auth. When RR fails on overflow, wipe the store so the incoming
+ * bond writes into a clean slate. */
+static int al1_ble_store_status(struct ble_store_status_event *event, void *arg)
+{
+    int rc = ble_store_util_status_rr(event, arg);
+    if (rc != 0 && event->event_code == BLE_STORE_EVENT_OVERFLOW) {
+        ESP_LOGW(TAG, "bond store overflow; RR evict failed rc=%d -> ble_store_clear", rc);
+        int clr = ble_store_clear();
+        if (clr != 0) {
+            ESP_LOGE(TAG, "ble_store_clear failed; rc=%d", clr);
+            return rc;   /* nothing more we can do; report original failure */
+        }
+        return 0;        /* slate clean: let NimBLE retry the write */
+    }
+    return rc;
+}
+
 static void al1_ble_on_sync(void)
 {
     int rc = ble_hs_util_ensure_addr(0);
@@ -329,7 +350,7 @@ esp_err_t al1_ble_start(void)
     ble_hs_cfg.reset_cb = al1_ble_on_reset;
     ble_hs_cfg.sync_cb = al1_ble_on_sync;
     ble_hs_cfg.gatts_register_cb = al1_gatt_register_cb;
-    ble_hs_cfg.store_status_cb = ble_store_util_status_rr;
+    ble_hs_cfg.store_status_cb = al1_ble_store_status;
 
     /* Security: Just-Works (no IO) + LE Secure Connections + bonding. */
     ble_hs_cfg.sm_io_cap = BLE_HS_IO_NO_INPUT_OUTPUT;
