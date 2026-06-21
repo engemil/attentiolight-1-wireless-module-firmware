@@ -11,6 +11,20 @@ All notable changes to the **AttentioLight-1 Wireless Module Firmware** project 
 
 ---
 
+## [1.0.0] (2026-06-21)
+
+Set explicit project version `1.0.0` in `fw_al1_wmod/CMakeLists.txt`
+(`project(fw_al1_wmod VERSION 1.0.0)`). Previously the project had no
+explicit version — ESP-IDF defaulted to `1.2`, which was a cosmetic
+internal default, not a project-set version. The version now appears in
+`esp_app_desc` and `project_description.json` and can be queried at
+runtime via `esp_app_get_description()->version`.
+
+Also includes the 2026-06-20 changes (AL1_CH_LOG forward to
+`idf.py monitor`).
+
+---
+
 ## [Development] (2026-06-20)
 
 Added
