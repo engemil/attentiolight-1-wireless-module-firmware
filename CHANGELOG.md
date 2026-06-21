@@ -11,6 +11,19 @@ All notable changes to the **AttentioLight-1 Wireless Module Firmware** project 
 
 ---
 
+## [Development] (2026-06-20)
+
+Added
+
+- `fw_al1_wmod/main/main.c`: `on_frame()` now handles `AL1_CH_LOG` frames
+  from the STM32 by printing them via `ESP_LOGI("STM32", ...)`. This surfaces
+  STM32 log lines on `idf.py monitor` during BLE-only operation, when the
+  STM32 cannot write to USB CDC0 (no host enumerated). Paired with the
+  STM32-side `log_printf_timeout()` change that forwards logs over
+  `AL1_CH_LOG` when USB is not active.
+
+---
+
 ## [Development] (2026-06-11)
 
 BLE bond-store self-heal. Hardened NimBLE bond persistence so a desynced on-flash

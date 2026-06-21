@@ -27,10 +27,17 @@ static void on_frame(uint8_t channel, uint8_t seq,
                      const uint8_t *payload, uint16_t len, void *user)
 {
     (void)user;
+    (void)seq;
 
     /* AP frames from the STM32 → out to BLE centrals via the bridge. */
     if (channel == AL1_CH_AP_CTRL) {
         al1_ble_ap_bridge_on_link_ap(seq, payload, len);
+    }
+    /* STM32 log lines forwarded over the UART link when USB is not enumerated
+     * by a host (so the STM32 can't write to CDC0). Print them here so they're
+     * visible on idf.py monitor during BLE-only operation. */
+    else if (channel == AL1_CH_LOG) {
+        ESP_LOGI("STM32", "%.*s", (int)len, (const char *)payload);
     }
 }
 
